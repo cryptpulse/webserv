@@ -2,8 +2,6 @@
 
 WebServ is a simple HTTP server written in C++ that adheres to HTTP/1.1 standards. It is designed to be non-blocking, supporting multiple clients simultaneously using efficient I/O multiplexing. The server configuration is provided through a configuration file, allowing users to customize various aspects of the server's behavior.
 
-This project was developed in colaboration with [jscaetano ](https://github.com/jscaetano).
-
 ## Features
 - **Host static websites**: Host static websites with HTML, CSS, and JavaScript files.
 - **Host multiple websites**: Host multiple websites simultaneously, each with its own configuration.
@@ -112,7 +110,7 @@ An http server is nothing more than input and output reader that uses file descr
 The function that makes this type of multiplexing chosen was `poll`, which is a more modern version of what the `select` function does.
 
 ### 1.3. How the poll is working
-Only one vector poll is used to store all information from servers and clients. It is declared in the class [Service](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/include/Service.hpp#L42)
+Only one vector poll is used to store all information from servers and clients. It is declared in the class
 
 ```c++
 class Service
@@ -121,8 +119,6 @@ class Service
 		pollfdVector	_pollingRequests;
 ```
 
-And the function `poll()` is called each on time in the main loop of the function [Service::launch](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L67) receiving the same vector of Polls `_pollingRquests`, then check all sockets. It's called every time on while because Clients can be added or removed on each time. The poll function is called in the function [_initPollingRequests](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L89)
-
 ```c++
 void Service::_initPollingRequests()
 {
@@ -130,8 +126,6 @@ void Service::_initPollingRequests()
 		throw std::runtime_error(ERR_POLL_FAIL + std::string(std::strerror(errno)));
 }
 ```
-
-The first sockets of poll are filled with the information of the servers in the function [Service::Setup](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L42), where at the end of each server, the function is called[_addSocketInPollingRequests](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L314) which adds the server socket to poll.
 
 ```c++
 void Service::_addSocketInPollingRequests()
@@ -153,8 +147,6 @@ void Service::_addSocketInPollingRequests()
 }
 ```
 
-To accept Clients, after the setup of all servers, within the function [Service::launch](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L67), When the Client has a request of [read data](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L124), The function is called [_acceptClient](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L148) that accepts the client connection and adds the Client's socket in Poll.
-
 ```c++
 void Service::_acceptConnection()
 {
@@ -171,7 +163,6 @@ void Service::_acceptConnection()
 ```
 
 ### 1.4. How is checked the Client read and write
-On each iteration of the loop in the function [Service::launch](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L67), é chamada a função [_pollingManager](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L95) that checks the type of polling request.
 
 ```c++
 void Service::_pollingManager()
@@ -195,7 +186,6 @@ void Service::_pollingManager()
 ```
 
 ### 1.5. Polling Requests Error Handling
-In the internal functions of [_pollingManager](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L95), is made the error treatment of each type of polling request and then called the function [_closeConnection](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L172) that closes the connection and then deletes that client.
 
 ```c++
 void Service::_closeConnection(std::string const &msg)
@@ -206,7 +196,6 @@ void Service::_closeConnection(std::string const &msg)
 	printInfo(msg, RED);
 }
 ```
-The function `_closeConnection` is called in functions [_readData](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L161), [_hasBadRequest](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L180) and [_hasDataToSend](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L205). Specifically in the function [_readData](https://github.com/waltergcc/42-webserv/blob/0201fbccef7be28ef80c92b7ebda00fe832c464f/webserv/src/Service.cpp#L161), The error is throw when the `recv` function returns a value less than 1. that 0 and -1 are treated as a factor to close the connection.
 
 ```c++
 void Service::_readData()
@@ -419,7 +408,7 @@ In this case, the servers will be listening on port 8080, and the sites will be 
 ### 5.4. Disclaimer
 The server isn't able to listen on the same port and host simultaneously because the bind work only with one socket per port and host. When the server is listening on the same port and different hosts it's setup because the hosts are different. If it'll find a host that is already listening on the same port and host, this server will be ignored.
 
-If the request received has a server_name and a host that is on the .conf but isn't the default, the server will replaced by this server temporarily on the function [_checkRequestedServer](https://github.com/waltergcc/42-webserv/blob/b8e300043c589f7439f70d5bb0e1eac04b0308d5/webserv/src/Service.cpp#L226)
+If the request received has a server_name and a host that is on the .conf but isn't the default, the server will replaced by this server temporarily on the function
 
 ```c++
 void Service::_checkRequestedServer()
